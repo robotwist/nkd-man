@@ -21,7 +21,7 @@
 
     function animate() {
         position += speed;
-        nkdMan.style.transform = `translateX(${position}px)`;
+        nkdMan.style.transform = `translate(${position}px, ${Math.sin(position / 20) * 10}px)`;
         frame = (frame + 1) % 2;
         nkdMan.src = frameImages[frame];
         
@@ -83,13 +83,14 @@
             if (encorePosition < window.innerWidth) {
                 requestAnimationFrame(animateEncore);
             } else {
-                document.body.removeChild(nkdManEncore);
+                setTimeout(() => {
+                    nkdManEncore.src = "https://robotwist.github.io/nkd-man/assets/nkdman_wave.png";
+                }, 500);
+                setTimeout(() => {
+                    document.body.removeChild(nkdManEncore);
+                }, 1500); // Small peek, wave, and gone forever
             }
         }
-        
-        setTimeout(() => {
-            nkdManEncore.src = "https://robotwist.github.io/nkd-man/assets/nkdman_wave.png";
-        }, 1000); // Midway wave before exit
         
         animateEncore();
     }
