@@ -8,11 +8,10 @@
     nkdMan.style.bottom = Math.random() * window.innerHeight * 0.6 + "px";
     nkdMan.style.width = "50px";
     nkdMan.style.zIndex = "999999";
-    nkdMan.style.transition = "transform 0.1s";
     document.body.appendChild(nkdMan);
 
     let position = -100;
-    let speed = 10;
+    let speed = 12;
     let frame = 0;
     let frameImages = [
         "https://robotwist.github.io/nkd-man/assets/nkdman_frame_0.png",
@@ -21,9 +20,15 @@
 
     function animate() {
         position += speed;
-        nkdMan.style.transform = `translate(${position}px, ${Math.sin(position / 20) * 10}px)`;
-        frame = (frame + 1) % 2;
-        nkdMan.src = frameImages[frame];
+        let randomWiggle = Math.sin(position / 10) * 10;
+        let bounceEffect = Math.abs(Math.sin(position / 15) * 5);
+        nkdMan.style.transform = `translate(${position}px, ${randomWiggle + bounceEffect}px)`;
+        
+        // Animate frame switching at 4FPS
+        setTimeout(() => {
+            frame = (frame + 1) % 2;
+            nkdMan.src = frameImages[frame];
+        }, 250);
         
         if (position < window.innerWidth) {
             requestAnimationFrame(animate);
@@ -47,15 +52,17 @@
             document.body.appendChild(cop);
             
             let copPosition = -80;
-            let copSpeed = 8;
+            let copSpeed = 9;
+            let tripAt = Math.random() * window.innerWidth * 0.5 + window.innerWidth * 0.2;
             function animateCop() {
                 copPosition += copSpeed;
                 cop.style.transform = `translateX(${copPosition}px)`;
                 
-                if (copPosition < window.innerWidth) {
+                if (copPosition < tripAt) {
                     requestAnimationFrame(animateCop);
                 } else {
-                    document.body.removeChild(cop);
+                    cop.src = "https://robotwist.github.io/nkd-man/assets/cop_trip.webp"; // Tripping frame
+                    setTimeout(() => document.body.removeChild(cop), 1000);
                 }
             }
             animateCop();
@@ -77,18 +84,22 @@
         function animateEncore() {
             encorePosition += encoreSpeed;
             nkdManEncore.style.transform = `translateX(-${encorePosition}px)`;
-            frame = (frame + 1) % 2;
-            nkdManEncore.src = frameImages[frame];
+            
+            // Animate frame switching at 4FPS
+            setTimeout(() => {
+                frame = (frame + 1) % 2;
+                nkdManEncore.src = frameImages[frame];
+            }, 250);
             
             if (encorePosition < window.innerWidth) {
                 requestAnimationFrame(animateEncore);
             } else {
                 setTimeout(() => {
-                    nkdManEncore.src = "https://robotwist.github.io/nkd-man/assets/nkdman_wave.png";
+                    nkdManEncore.src = "https://robotwist.github.io/nkd-man/assets/nkdman_rockon.png";
                 }, 500);
                 setTimeout(() => {
                     document.body.removeChild(nkdManEncore);
-                }, 1500); // Small peek, wave, and gone forever
+                }, 2000); // Longer peek-and-wave effect
             }
         }
         
