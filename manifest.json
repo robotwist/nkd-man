@@ -4,7 +4,6 @@
     "version": "1.0",
     "description": "Click the extension button to unleash NK D Man onto any webpage!",
     "permissions": ["activeTab", "scripting"],
-    "host_permissions": ["<all_urls>"],
     "icons": {
         "16": "icon.png",
         "48": "icon.png",
