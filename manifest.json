@@ -3,7 +3,8 @@
     "name": "Summon NK D Man",
     "version": "1.0",
     "description": "Click the extension button to unleash NK D Man onto any webpage!",
-    "permissions": ["activeTab"],
+    "permissions": ["activeTab", "scripting"],
+    "host_permissions": ["<all_urls>"],
     "icons": {
         "16": "icon.png",
         "48": "icon.png",
@@ -11,11 +12,9 @@
     },
     "action": {
         "default_icon": "icon.png",
-        "default_title": "Summon NK D Man",
-        "default_popup": "popup.html"
+        "default_title": "Summon NK D Man"
     },
     "background": {
         "service_worker": "background.js"
-    },
-    "host_permissions": ["<all_urls>"]
+    }
 }
