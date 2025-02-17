@@ -11,7 +11,7 @@
     document.body.appendChild(nkdMan);
 
     let position = -100;
-    let speed = 4.5;
+    let speed = 7;
     let frame = 0;
     let frameImages = [
         "https://robotwist.github.io/nkd-man/assets/nkdman_frame_0.png",
@@ -49,7 +49,7 @@
         document.body.appendChild(nkdManEncore);
         
         let encorePosition = -100;
-        let encoreSpeed = 10;
+        let encoreSpeed = 7;
         function animateEncore() {
             encorePosition += encoreSpeed;
             nkdManEncore.style.transform = `translateX(-${encorePosition}px)`;
