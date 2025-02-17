@@ -6,12 +6,12 @@
     nkdMan.style.position = "fixed";
     nkdMan.style.left = "-100px";
     nkdMan.style.bottom = Math.random() * window.innerHeight * 0.6 + "px";
-    nkdMan.style.width = "50px";
+    nkdMan.style.width = "100px";
     nkdMan.style.zIndex = "999999";
     document.body.appendChild(nkdMan);
 
     let position = -100;
-    let speed = 9;
+    let speed = 4.5;
     let frame = 0;
     let frameImages = [
         "https://robotwist.github.io/nkd-man/assets/nkdman_frame_0.png",
@@ -44,7 +44,7 @@
         nkdManEncore.style.position = "fixed";
         nkdManEncore.style.right = "-100px";
         nkdManEncore.style.bottom = Math.random() * window.innerHeight * 0.6 + "px";
-        nkdManEncore.style.width = "50px";
+        nkdManEncore.style.width = "100px";
         nkdManEncore.style.zIndex = "999999";
         document.body.appendChild(nkdManEncore);
         
