@@ -1,98 +1,140 @@
-// NK D Man - The Ultimate Pixel Streaker (Simplified Version)
+// NKD Man 1.1 - Cops Chase and Collide!
 (function() {
-    // Create the sprite element
-    let nkdMan = document.createElement("img");
-    nkdMan.src = "https://robotwist.github.io/nkd-man/assets/nkdman_frame_0.png";
-    nkdMan.style.position = "fixed";
-    nkdMan.style.left = "-100px";
-    nkdMan.style.bottom = Math.random() * window.innerHeight * 0.6 + "px";
-    nkdMan.style.width = "100px";
-    nkdMan.style.zIndex = "999999";
-    document.body.appendChild(nkdMan);
-
-    let position = -100;
-    let speed = 150;
-    let frame = 0;
-    let frameImages = [
-        "https://robotwist.github.io/nkd-man/assets/nkdman_frame_0.png",
-        "https://robotwist.github.io/nkd-man/assets/nkdman_frame_1.png"
+    const frameImages = [
+        "assets/nkdman_frame_0.png",
+        "assets/nkdman_frame_1.png"
     ];
+    const copImage = "assets/cop_man.webp";
+    const copTripImage = "assets/cop_trip.webp";
+    let nkdMan, position = -100, speed = 10, frame = 0, cops = [];
+    let hasReturned = false;
 
-    function animate() {
+    function createImage(src, styles) {
+        const img = document.createElement("img");
+        img.src = src;
+        Object.assign(img.style, styles);
+        document.body.appendChild(img);
+        return img;
+    }
+
+    function animateNKDMan() {
         position += speed;
-        nkdMan.style.transform = `translate(${position}px, ${Math.sin(position / 15) * 5}px)`;
-
-        // Animate frame switching at 4FPS
-        frame = (frame + 1) % 2;
-        nkdMan.src = frameImages[frame];
+        nkdMan.style.transform = `translate(${position}px, ${Math.sin(position / 10) * 5}px)`;
+        nkdMan.src = frameImages[frame = (frame + 1) % 2];
 
         if (position < window.innerWidth) {
-            setTimeout(() => requestAnimationFrame(animate), 250); // Smooth frame sync
+            requestAnimationFrame(animateNKDMan);
         } else {
             document.body.removeChild(nkdMan);
-            setTimeout(leaveScreenCompletely, 1000); // Delay before final return
+            setTimeout(returnNKDMan, 2000);
         }
     }
 
-    function leaveScreenCompletely() {
-        let nkdManExit = document.createElement("img");
-        nkdManExit.src = frameImages[0];
-        nkdManExit.style.position = "fixed";
-        nkdManExit.style.left = "100%"; // Start fully off-screen
-        nkdManExit.style.bottom = Math.random() * window.innerHeight * 0.6 + "px";
-        nkdManExit.style.width = "100px";
-        nkdManExit.style.zIndex = "999999";
-        document.body.appendChild(nkdManExit);
+    function returnNKDMan() {
+        if (hasReturned) {
+            return;
+        }
+        hasReturned = true;
 
-        let exitPosition = window.innerWidth;
-        let exitSpeed = 50;
+        nkdMan = createImage(frameImages[0], {
+            position: "fixed",
+            left: "100%",
+            bottom: `${Math.random() * window.innerHeight * 0.6}px`,
+            width: "100px",
+            zIndex: "999999"
+        });
 
-        function animateExit() {
-            exitPosition += exitSpeed;
-            nkdManExit.style.transform = `translateX(${exitPosition}px)`;
-
-            if (exitPosition < window.innerWidth * 2) {
-                requestAnimationFrame(animateExit);
+        let returnPosition = window.innerWidth;
+        function animateReturn() {
+            returnPosition -= speed;
+            nkdMan.style.transform = `translateX(${returnPosition}px)`;
+            if (returnPosition > -100) {
+                requestAnimationFrame(animateReturn);
             } else {
-                document.body.removeChild(nkdManExit);
-                setTimeout(returnForFinalSalute, 2000); // Pause before final salute
+                document.body.removeChild(nkdMan);
+                setTimeout(spawnCops, 500);
             }
         }
-
-        animateExit();
+        animateReturn();
     }
 
-    function returnForFinalSalute() {
-        let nkdManFinal = document.createElement("img");
-        nkdManFinal.src = frameImages[0];
-        nkdManFinal.style.position = "fixed";
-        nkdManFinal.style.left = "-100px";
-        nkdManFinal.style.bottom = Math.random() * window.innerHeight * 0.6 + "px";
-        nkdManFinal.style.width = "100px";
-        nkdManFinal.style.zIndex = "999999";
-        document.body.appendChild(nkdManFinal);
+    function spawnCops() {
+        cops = [
+            createImage(copImage, {
+                position: "fixed",
+                left: "-100px",
+                bottom: `${Math.random() * window.innerHeight * 0.6}px`,
+                width: "80px",
+                zIndex: "999998"
+            }),
+            createImage(copImage, {
+                position: "fixed",
+                left: `${window.innerWidth}px`,
+                bottom: `${Math.random() * window.innerHeight * 0.6}px`,
+                width: "80px",
+                zIndex: "999998"
+            })
+        ];
+        requestAnimationFrame(animateCops);
+    }
 
-        let finalPosition = -100;
-        let finalSpeed = 50;
+    function animateCops() {
+        const leftCop = cops[0];
+        const rightCop = cops[1];
 
-        function animateFinal() {
-            finalPosition += finalSpeed;
-            nkdManFinal.style.transform = `translateX(${finalPosition}px)`;
+        function moveCops() {
+            const leftX = parseInt(leftCop.style.left) + 5;
+            const rightX = parseInt(rightCop.style.left) - 5;
 
-            if (finalPosition < window.innerWidth - 150) {  // Stops before the screen edge
-                requestAnimationFrame(animateFinal);
+            leftCop.style.left = `${leftX}px`;
+            rightCop.style.left = `${rightX}px`;
+
+            if (Math.abs(leftX - rightX) < 50) {
+                leftCop.src = copTripImage;
+                rightCop.src = copTripImage;
+                setTimeout(() => {
+                    document.body.removeChild(leftCop);
+                    document.body.removeChild(rightCop);
+                    setTimeout(escapeNKDMan, 2000); // Escape after cops crash
+                }, 1000);
             } else {
-                // Perform the final 1-2 headbang salute before disappearing
-                setTimeout(() => { nkdManFinal.src = frameImages[0]; }, 500);
-                setTimeout(() => { nkdManFinal.src = frameImages[1]; }, 1000);
-                setTimeout(() => { nkdManFinal.src = frameImages[0]; }, 1500);
-                setTimeout(() => document.body.removeChild(nkdManFinal), 2500);
+                requestAnimationFrame(moveCops);
             }
         }
-
-        animateFinal();
+        moveCops();
     }
 
-    // Delay start for surprise factor
-    setTimeout(animate, Math.random() * 5000 + 2000);
+    function escapeNKDMan() {
+        nkdMan = createImage(frameImages[0], {
+            position: "fixed",
+            left: "-100px",
+            bottom: `${Math.random() * window.innerHeight * 0.6}px`,
+            width: "100px",
+            zIndex: "999999"
+        });
+
+        position = -100;
+        function animateEscape() {
+            position += speed;
+            nkdMan.style.transform = `translate(${position}px, ${Math.sin(position / 10) * 5}px)`;
+            nkdMan.src = frameImages[frame = (frame + 1) % 2];
+
+            if (position < window.innerWidth) {
+                requestAnimationFrame(animateEscape);
+            } else {
+                document.body.removeChild(nkdMan);
+            }
+        }
+        animateEscape();
+    }
+
+    nkdMan = createImage(frameImages[0], {
+        position: "fixed",
+        left: "-100px",
+        bottom: `${Math.random() * window.innerHeight * 0.6}px`,
+        width: "100px",
+        zIndex: "999999"
+    });
+
+    setTimeout(animateNKDMan, 2000);
 })();
