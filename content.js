@@ -118,17 +118,17 @@
         copContainer.style.position = "fixed";
         copContainer.style.left = position.left;
         copContainer.style.bottom = position.bottom;
-        copContainer.style.width = "90px";        // Container width
-        copContainer.style.height = "90px";       // Container height
+        copContainer.style.width = "100px";       // Container width
+        copContainer.style.height = "100px";      // Container height
         copContainer.style.zIndex = "999998";
         copContainer.style.overflow = "visible";  // Let sprite overflow if needed
         
         // Create the actual sprite element inside the container
         const copSprite = document.createElement("div");
-        copSprite.style.width = "90px";           // Sprite size
-        copSprite.style.height = "90px";
+        copSprite.style.width = "100px";          // Sprite size
+        copSprite.style.height = "100px";
         copSprite.style.backgroundImage = `url(${copSpriteSheet})`;
-        copSprite.style.backgroundSize = "200px 200px"; // Actual size of the sprite sheet
+        copSprite.style.backgroundSize = "1024px 1024px"; // Actual size based on user's info
         copSprite.style.backgroundRepeat = "no-repeat";
         copSprite.style.backgroundPosition = "0 0"; // Start with first frame
         copSprite.style.transform = direction === "left" ? "" : "scaleX(-1)";
@@ -164,9 +164,9 @@
             // Only update frame if enough time has passed
             if (!lastFrameTime || timestamp - lastFrameTime > copAnimationSpeed) {
                 const runFrames = [
-                    { x: 0, y: 0 },      // Frame 1
-                    { x: -100, y: 0 },    // Frame 2
-                    { x: 0, y: -100 }     // Frame 3
+                    { x: 0, y: 0 },           // Frame 1 - top left quadrant
+                    { x: -512, y: 0 },        // Frame 2 - top right quadrant
+                    { x: 0, y: -512 }         // Frame 3 - bottom left quadrant
                 ];
                 const currentFrame = runFrames[copFrame];
                 
@@ -202,9 +202,9 @@
             rightCop.style.left = `${rightX}px`;
 
             if (Math.abs(leftX - rightX) < 50) {
-                // Change to trip sprite
-                leftCop.sprite.style.backgroundPosition = "-100px -100px";
-                rightCop.sprite.style.backgroundPosition = "-100px -100px";
+                // Change to trip sprite (bottom right quadrant)
+                leftCop.sprite.style.backgroundPosition = "-512px -512px";
+                rightCop.sprite.style.backgroundPosition = "-512px -512px";
                 
                 // Mark as tripped to stop run animation
                 leftCop.tripped = true;
@@ -463,9 +463,9 @@
             // Only update frame if enough time has passed
             if (!lastFrameTime || timestamp - lastFrameTime > copAnimationSpeed) {
                 const runFrames = [
-                    { x: 0, y: 0 },      // Frame 1
-                    { x: -100, y: 0 },    // Frame 2
-                    { x: 0, y: -100 }     // Frame 3
+                    { x: 0, y: 0 },           // Frame 1 - top left quadrant
+                    { x: -512, y: 0 },        // Frame 2 - top right quadrant
+                    { x: 0, y: -512 }         // Frame 3 - bottom left quadrant
                 ];
                 const currentFrame = runFrames[copFrame];
                 
@@ -554,10 +554,10 @@
         }
         
         function copCollide() {
-            // Cops trip over each other
+            // Cops trip over each other (bottom right quadrant)
             logStatus("Final chase: Cops collide");
-            leftCop.sprite.style.backgroundPosition = "-100px -100px";
-            rightCop.sprite.style.backgroundPosition = "-100px -100px";
+            leftCop.sprite.style.backgroundPosition = "-512px -512px";
+            rightCop.sprite.style.backgroundPosition = "-512px -512px";
             
             leftCop.tripped = true;
             rightCop.tripped = true;
