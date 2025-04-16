@@ -17,12 +17,12 @@
         console.log(`[NKD Debug] ${message}`);
     }
     
-    // Sprite positions for the cop animations
+    // Sprite positions for the cop animations - fixed to match the actual sprite sheet structure
     const copSpritePositions = {
-        run1: "0px 0px",         // Top left quadrant
-        run2: "-512px 0px",      // Top right quadrant
-        run3: "0px -512px",      // Bottom left quadrant
-        trip: "-512px -512px"    // Bottom right quadrant
+        run1: "0px 0px",             // Top left quadrant
+        run2: "-128px 0px",          // Top right quadrant - was -256px
+        run3: "0px -128px",          // Bottom left quadrant - was -256px
+        trip: "-128px -128px"        // Bottom right quadrant - was -256px
     };
     
     // Animation timing constants
@@ -139,17 +139,17 @@
         copContainer.style.position = "fixed";
         copContainer.style.left = position.left;
         copContainer.style.bottom = position.bottom;
-        copContainer.style.width = "100px"; // Smaller container matches visible area
-        copContainer.style.height = "100px";
+        copContainer.style.width = "128px"; // Match container size to sprite size
+        copContainer.style.height = "128px";
         copContainer.style.zIndex = "999998";
-        copContainer.style.overflow = "hidden"; // Ensure we crop to container
+        copContainer.style.overflow = "visible"; // Allow sprite to overflow for better visibility
         
         // Create a div for the sprite that will use background-image
         const copSprite = document.createElement("div");
         copSprite.style.width = "100%";
         copSprite.style.height = "100%";
         copSprite.style.backgroundImage = `url(${copSpriteSheet})`;
-        copSprite.style.backgroundSize = "1024px 1024px"; // Full sprite sheet size
+        copSprite.style.backgroundSize = "256px 256px"; // Adjusted size to match actual sprite sheet structure
         copSprite.style.backgroundPosition = copSpritePositions.run1; // Start with first frame
         
         // Apply transform for direction
@@ -163,7 +163,7 @@
         copContainer.appendChild(copSprite);
         document.body.appendChild(copContainer);
         
-        logStatus(`Created cop with ${direction} direction, using background-image approach`);
+        logStatus(`Created cop with ${direction} direction, sprite size: 256px x 256px, position: ${copSprite.style.backgroundPosition}`);
         
         return copContainer;
     }
