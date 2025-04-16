@@ -17,7 +17,7 @@
         console.log(`[NKD Debug] ${message}`);
     }
     
-    // Sprite positions for the cop animations - Adjusted values
+    // Sprite positions for the cop animations - Better adjusted values
     const copSpritePositions = {
         run1: { x: 0, y: 0 },       // Top left cop
         run2: { x: 100, y: 0 },     // Top right cop
@@ -121,12 +121,13 @@
         cop.style.position = "fixed";
         cop.style.left = position.left;
         cop.style.bottom = position.bottom;
-        cop.style.width = "100px";     // Adjusted size to be fully visible
-        cop.style.height = "100px";    // Adjusted size to be fully visible
+        cop.style.width = "100px";     // Size to be fully visible
+        cop.style.height = "100px";    // Size to be fully visible
         cop.style.zIndex = "999998";
         cop.style.backgroundImage = `url(${copSpriteSheet})`;
-        // Updated background size to account for the sprite sheet dimensions vs element size
-        cop.style.backgroundSize = `${copFrameWidth * 2}px ${copFrameHeight * 2}px`;
+        
+        // Make the background image 50% of the original size to fit in the container
+        cop.style.backgroundSize = `400px 400px`;  // Double the original sheet dimensions
         cop.style.backgroundRepeat = "no-repeat";
         cop.style.transform = direction === "left" ? "" : "scaleX(-1)";
         
@@ -160,7 +161,6 @@
                 const runFrames = [copSpritePositions.run1, copSpritePositions.run2, copSpritePositions.run3];
                 const currentFrame = runFrames[copFrame];
                 
-                // Update sprite position for both cops
                 cops.forEach(cop => {
                     if (!cop.tripped) {
                         cop.style.backgroundPosition = `-${currentFrame.x}px -${currentFrame.y}px`;
@@ -419,15 +419,29 @@
             zIndex: "999990"
         });
         
-        // Cops chasing from both directions - position them higher to be fully visible
+        // Create heart element (hidden initially)
+        const heart = document.createElement("div");
+        heart.style.position = "fixed";
+        heart.style.left = "50%";
+        heart.style.top = "40%";
+        heart.style.transform = "translate(-50%, -50%) scale(0)";
+        heart.style.fontSize = "100px";
+        heart.style.color = "red";
+        heart.style.zIndex = "1000000";
+        heart.style.transition = "transform 0.5s ease-out";
+        heart.innerHTML = "❤️";
+        heart.style.opacity = "0";
+        document.body.appendChild(heart);
+        
+        // Cops chasing heroes - one from each side
         const leftCop = createCopElement({
             left: "-200px",
-            bottom: `${Math.random() * window.innerHeight * 0.3 + 100}px` // Adjusted to be more visible
+            bottom: nkdMan.style.bottom  // Same height as NKD Man
         }, "left");
         
         const rightCop = createCopElement({
             left: `${window.innerWidth + 100}px`,
-            bottom: `${Math.random() * window.innerHeight * 0.3 + 100}px` // Adjusted to be more visible
+            bottom: nkdLady.style.bottom  // Same height as NKD Lady
         }, "right");
         
         cops = [leftCop, rightCop];
@@ -460,81 +474,93 @@
         requestAnimationFrame(animateCopSprites);
         
         // Animate all characters
+        const centerX = window.innerWidth / 2;
         let manPosition = -100;
         let ladyPosition = window.innerWidth;
+        let heartShown = false;
         
         function animateFinalChase() {
-            // Move NKD Man from left to right
-            manPosition += speed;
-            nkdMan.style.transform = `translate(${manPosition}px, ${Math.sin(manPosition / 10) * 5}px)`;
-            nkdMan.src = frameImages[frame = (frame + 1) % 2];
+            // Move NKD Man from left toward center
+            if (manPosition < centerX - 50) {
+                manPosition += speed;
+                nkdMan.style.left = `${manPosition}px`;
+                nkdMan.style.transform = `translateY(${Math.sin(manPosition / 10) * 5}px)`;
+                nkdMan.src = frameImages[frame = (frame + 1) % 2];
+            }
             
-            // Move NKD Lady from right to left
-            ladyPosition -= speed;
-            nkdLady.style.transform = `translateX(${ladyPosition - window.innerWidth}px)`;
+            // Move NKD Lady from right toward center
+            if (ladyPosition > centerX + 50) {
+                ladyPosition -= speed;
+                nkdLady.style.left = `${ladyPosition}px`;
+                nkdLady.style.transform = `translateY(${Math.sin(ladyPosition / 8) * 5}px)`;
+            }
             
-            // Move cops
-            const leftCopX = parseInt(leftCop.style.left) + copMovementSpeed + 1; // Slightly faster than regular movement
+            // Move cops - each chasing their respective hero
+            const leftCopX = parseInt(leftCop.style.left) + copMovementSpeed + 1; 
             const rightCopX = parseInt(rightCop.style.left) - copMovementSpeed - 1;
             
             leftCop.style.left = `${leftCopX}px`;
             rightCop.style.left = `${rightCopX}px`;
             
-            // Check if NKD Man and Lady meet in the middle
-            if (Math.abs(manPosition - (window.innerWidth - ladyPosition)) < 50 && 
-                !leftCop.tripped) {
-                // They meet! Now they run together
-                logStatus("Final chase: Characters meet in middle");
-                loveEscape();
-                return;
-            }
-            
-            // Check if cops collide
-            if (Math.abs(leftCopX - rightCopX) < 50 && !leftCop.tripped) {
-                // Cops trip over each other
-                logStatus("Final chase: Cops collide");
-                leftCop.style.backgroundPosition = `-${copSpritePositions.trip.x}px -${copSpritePositions.trip.y}px`;
-                rightCop.style.backgroundPosition = `-${copSpritePositions.trip.x}px -${copSpritePositions.trip.y}px`;
+            // Check if heroes meet in the middle
+            if (Math.abs(manPosition - (centerX - 50)) < 10 && 
+                Math.abs(ladyPosition - (centerX + 50)) < 10 && 
+                !heartShown) {
+                // They meet! Show heart
+                heartShown = true;
+                logStatus("Final chase: Characters meet, true love!");
+                heart.style.opacity = "1";
+                heart.style.transform = "translate(-50%, -50%) scale(1.5)";
                 
-                leftCop.tripped = true;
-                rightCop.tripped = true;
+                // Look at each other
+                nkdMan.style.transform = "";
+                nkdLady.style.transform = "";
                 
+                // Schedule cop collision after heart appears
                 setTimeout(() => {
-                    if (leftCop.parentNode) document.body.removeChild(leftCop);
-                    if (rightCop.parentNode) document.body.removeChild(rightCop);
+                    // Cops collide
+                    if (leftCop.parentNode && rightCop.parentNode && !leftCop.tripped) {
+                        copCollide();
+                    }
                 }, 1000);
             }
             
-            if ((manPosition < window.innerWidth * 1.5 && 
-                ladyPosition > -100) || 
-                !leftCop.tripped) {
-                requestAnimationFrame(animateFinalChase);
-            } else {
-                // Clean up if somehow we got here without the love escape
-                logStatus("Final chase: Cleanup without love escape");
-                cleanupAct4();
+            // Check if cops should collide (if heroes have met)
+            if (heartShown && !leftCop.tripped && 
+                Math.abs(leftCopX - rightCopX) < 80) {
+                copCollide();
+                return;
             }
+            
+            if (!heartShown || !leftCop.tripped) {
+                requestAnimationFrame(animateFinalChase);
+            } else if (heartShown && leftCop.tripped) {
+                // After heart shown and cops collided, show ending
+                setTimeout(loveEscape, 1500);
+            }
+        }
+        
+        function copCollide() {
+            // Cops trip over each other
+            logStatus("Final chase: Cops collide");
+            leftCop.style.backgroundPosition = `-${copSpritePositions.trip.x}px -${copSpritePositions.trip.y}px`;
+            rightCop.style.backgroundPosition = `-${copSpritePositions.trip.x}px -${copSpritePositions.trip.y}px`;
+            
+            leftCop.tripped = true;
+            rightCop.tripped = true;
+            
+            // Make cops fall down animation
+            leftCop.style.transform = "rotate(90deg)";
+            rightCop.style.transform = "rotate(-90deg)";
+            
+            setTimeout(() => {
+                if (leftCop.parentNode) document.body.removeChild(leftCop);
+                if (rightCop.parentNode) document.body.removeChild(rightCop);
+            }, 1500);
         }
         
         function loveEscape() {
             logStatus("Love escape sequence starting");
-            // Align NKD Man and Lady together
-            const escapeY = Math.min(
-                parseFloat(nkdMan.style.bottom), 
-                parseFloat(nkdLady.style.bottom)
-            );
-            
-            nkdMan.style.bottom = `${escapeY}px`;
-            nkdLady.style.bottom = `${escapeY}px`;
-            
-            // Position them in the middle
-            const centerX = window.innerWidth / 2;
-            nkdMan.style.left = `${centerX - 90}px`;
-            nkdLady.style.left = `${centerX + 10}px`;
-            
-            // Reset transform
-            nkdMan.style.transform = "";
-            nkdLady.style.transform = "";
             
             // Run off together to the right
             let escapePosition = centerX;
@@ -542,8 +568,11 @@
             function escapeAnimation() {
                 escapePosition += speed;
                 
-                nkdMan.style.left = `${escapePosition - 90}px`;
-                nkdLady.style.left = `${escapePosition + 10}px`;
+                nkdMan.style.left = `${escapePosition - 70}px`;
+                nkdLady.style.left = `${escapePosition + 30}px`;
+                
+                // Ensure heart follows them
+                heart.style.left = `${escapePosition}px`;
                 
                 nkdMan.src = frameImages[frame = (frame + 1) % 2];
                 
@@ -551,6 +580,7 @@
                     requestAnimationFrame(escapeAnimation);
                 } else {
                     logStatus("Animation sequence complete");
+                    if (heart.parentNode) document.body.removeChild(heart);
                     cleanupAct4();
                 }
             }
