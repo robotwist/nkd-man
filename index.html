@@ -72,6 +72,18 @@
             font-size: 1.1rem;
         }
         
+        .insider-tip {
+            background-color: rgba(255, 190, 11, 0.1);
+            border-left: 4px solid var(--accent-color);
+            padding: 1rem;
+            margin-bottom: 2rem;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .insider-tip strong {
+            color: var(--primary-color);
+        }
+        
         .steps {
             margin: 2rem 0;
         }
@@ -80,6 +92,7 @@
             display: flex;
             margin-bottom: 1rem;
             align-items: center;
+            position: relative;
         }
         
         .step-number {
@@ -94,10 +107,40 @@
             font-weight: 600;
             margin-right: 1rem;
             flex-shrink: 0;
+            z-index: 2;
         }
         
         .step-text {
             font-size: 1.1rem;
+            transition: opacity 0.5s ease;
+        }
+        
+        .step-detail {
+            font-size: 0.95rem;
+            color: #666;
+            margin-top: 0.5rem;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.6s ease, opacity 0.4s ease;
+            opacity: 0;
+        }
+        
+        .step-detail.revealed {
+            max-height: 100px;
+            opacity: 1;
+        }
+        
+        .step.completed .step-number {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .step.completed::after {
+            content: '✓';
+            position: absolute;
+            right: 10px;
+            color: var(--secondary-color);
+            font-weight: bold;
         }
         
         .click-counter {
@@ -139,6 +182,25 @@
             font-size: 0.9rem;
             color: rgba(0,0,0,0.5);
         }
+        
+        .hidden-message {
+            text-align: center;
+            padding: 1rem;
+            background-color: rgba(58, 134, 255, 0.08);
+            border-radius: 8px;
+            margin-top: 2rem;
+            display: none;
+        }
+        
+        .hidden-message.visible {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 
@@ -152,27 +214,48 @@
         <div class="content">
             <p>Click anywhere on the page 5 times to unleash the NKD Man experience. Watch as the story unfolds through four captivating acts.</p>
             
+            <div class="insider-tip">
+                <p><strong>Insider Tip:</strong> The 5-click activation is by design! When installed as a Chrome extension, this stealthy trigger mechanism allows you to surprise unsuspecting friends or colleagues by casually getting them to click several times on a page. They won't realize what's happening until NKD Man makes his unexpected entrance, followed by a series of increasingly hilarious events!</p>
+                <p>The descriptions below are hidden initially — each act's details are revealed only after you've experienced them, preserving the surprise of your first viewing.</p>
+            </div>
+            
             <div class="steps">
-                <div class="step">
+                <div class="step" data-act="1">
                     <div class="step-number">1</div>
-                    <div class="step-text">NKD Man makes his dashing entrance</div>
+                    <div class="step-content">
+                        <div class="step-text">Act I: The Introduction</div>
+                        <div class="step-detail">NKD Man makes his dashing entrance, streaking boldly across your screen in all his pixelated glory!</div>
+                    </div>
                 </div>
-                <div class="step">
+                <div class="step" data-act="2">
                     <div class="step-number">2</div>
-                    <div class="step-text">Bumbling cops give chase</div>
+                    <div class="step-content">
+                        <div class="step-text">Act II: The Pursuit</div>
+                        <div class="step-detail">Bumbling cops give chase, but their coordination leaves much to be desired. Watch as hilarity ensues!</div>
+                    </div>
                 </div>
-                <div class="step">
+                <div class="step" data-act="3">
                     <div class="step-number">3</div>
-                    <div class="step-text">NKD Lady steals the spotlight</div>
+                    <div class="step-content">
+                        <div class="step-text">Act III: The Distraction</div>
+                        <div class="step-detail">NKD Lady steals the spotlight, turning heads and causing quite the commotion - even NKD Man is stunned!</div>
+                    </div>
                 </div>
-                <div class="step">
+                <div class="step" data-act="4">
                     <div class="step-number">4</div>
-                    <div class="step-text">A grand finale of love and escape</div>
+                    <div class="step-content">
+                        <div class="step-text">Act IV: The Grand Finale</div>
+                        <div class="step-detail">A spectacular conclusion featuring love, escape, and the triumph of nudity over authority!</div>
+                    </div>
                 </div>
             </div>
             
             <div class="click-counter" id="counter-container">
                 <span>Click Progress: <span id="click-count">0</span>/5</span>
+            </div>
+            
+            <div class="hidden-message" id="acts-completed-message">
+                You've witnessed all four acts of the NKD Man saga! Refresh the page to experience it again.
             </div>
         </div>
         
@@ -183,23 +266,72 @@
 
     <!-- Track clicks for display purposes -->
     <script>
-        document.addEventListener('click', function() {
-            const counter = document.getElementById('click-count');
-            const counterContainer = document.getElementById('counter-container');
-            const currentCount = parseInt(counter.textContent);
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if acts have been completed before (using localStorage)
+            const completedActs = JSON.parse(localStorage.getItem('nkdman_completed_acts') || '[]');
             
-            if (currentCount < 5) {
-                const newCount = currentCount + 1;
-                counter.textContent = newCount;
+            // Mark previously completed acts
+            completedActs.forEach(actNumber => {
+                const step = document.querySelector(`.step[data-act="${actNumber}"]`);
+                if (step) {
+                    step.classList.add('completed');
+                    step.querySelector('.step-detail').classList.add('revealed');
+                }
+            });
+            
+            // Click counter
+            document.addEventListener('click', function() {
+                const counter = document.getElementById('click-count');
+                const counterContainer = document.getElementById('counter-container');
+                const currentCount = parseInt(counter.textContent);
                 
-                // Update progress bar
-                counterContainer.className = 'click-counter progress-' + (newCount * 20);
+                if (currentCount < 5) {
+                    const newCount = currentCount + 1;
+                    counter.textContent = newCount;
+                    
+                    // Update progress bar
+                    counterContainer.className = 'click-counter progress-' + (newCount * 20);
+                    
+                    // Add a little animation effect
+                    counter.style.transform = 'scale(1.3)';
+                    setTimeout(() => {
+                        counter.style.transform = 'scale(1)';
+                    }, 200);
+                }
+            });
+        });
+        
+        // Track animation state to reveal act descriptions
+        // This section listens for custom events from content.js
+        window.addEventListener('actCompleted', function(e) {
+            if (!e.detail || !e.detail.act) return;
+            
+            const actNumber = e.detail.act;
+            const step = document.querySelector(`.step[data-act="${actNumber}"]`);
+            
+            if (step) {
+                // Mark as completed
+                step.classList.add('completed');
                 
-                // Add a little animation effect
-                counter.style.transform = 'scale(1.3)';
-                setTimeout(() => {
-                    counter.style.transform = 'scale(1)';
-                }, 200);
+                // Reveal the description
+                const detailElement = step.querySelector('.step-detail');
+                if (detailElement) {
+                    detailElement.classList.add('revealed');
+                }
+                
+                // Store completed act in localStorage
+                const completedActs = JSON.parse(localStorage.getItem('nkdman_completed_acts') || '[]');
+                if (!completedActs.includes(actNumber)) {
+                    completedActs.push(actNumber);
+                    localStorage.setItem('nkdman_completed_acts', JSON.stringify(completedActs));
+                }
+                
+                // If all acts completed, show final message
+                if (actNumber === 4) {
+                    setTimeout(() => {
+                        document.getElementById('acts-completed-message').classList.add('visible');
+                    }, 1000);
+                }
             }
         });
     </script>
