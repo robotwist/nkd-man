@@ -17,12 +17,12 @@
         console.log(`[NKD Debug] ${message}`);
     }
     
-    // Sprite positions for the cop animations - Completely redone
+    // Sprite positions for the cop animations
     const copSpritePositions = {
-        run1: { x: 0, y: 0 },
-        run2: { x: 100, y: 0 },
-        run3: { x: 0, y: 100 },
-        trip: { x: 100, y: 100 }
+        run1: "0px 0px",         // Top left quadrant
+        run2: "-512px 0px",      // Top right quadrant
+        run3: "0px -512px",      // Bottom left quadrant
+        trip: "-512px -512px"    // Bottom right quadrant
     };
     
     // Animation timing constants
@@ -85,60 +85,85 @@
         hasReturned = true;
         logStatus("Act 2: NKD Man returning");
 
-        nkdMan = createImage(frameImages[0], {
-            position: "fixed",
-            left: "100%",
-            bottom: `${Math.random() * window.innerHeight * 0.6}px`,
-            width: "100px",
-            zIndex: "999999"
-        });
+        let runCount = 0;       // Count for number of circuits
+        const totalRuns = 3;    // Make him run 3 times as requested
+        
+        function startRun() {
+            // Create the NKD Man for this run
+            nkdMan = createImage(frameImages[0], {
+                position: "fixed",
+                left: "100%",
+                bottom: `${Math.random() * window.innerHeight * 0.6}px`,
+                width: "100px",
+                zIndex: "999999"
+            });
 
-        let returnPosition = window.innerWidth;
-        function animateReturn() {
-            returnPosition -= speed;
-            nkdMan.style.transform = `translateX(${returnPosition}px)`;
-            if (returnPosition > -100) {
-                requestAnimationFrame(animateReturn);
-            } else {
-                document.body.removeChild(nkdMan);
-                setTimeout(() => {
-                    if (currentAct === 2) {
-                        logStatus("Spawning cops for Act 2");
-                        spawnCops();
+            let returnPosition = window.innerWidth;
+            
+            function animateReturn() {
+                returnPosition -= speed;
+                nkdMan.style.left = `${returnPosition}px`;  // Use left instead of transform for more reliable positioning
+                nkdMan.src = frameImages[frame = (frame + 1) % 2]; // Animate walking
+                
+                if (returnPosition > -100) {
+                    requestAnimationFrame(animateReturn);
+                } else {
+                    document.body.removeChild(nkdMan);
+                    runCount++;
+                    
+                    if (runCount < totalRuns) {
+                        // Start another run immediately
+                        startRun();
+                    } else {
+                        // We've completed all runs, proceed to cops
+                        setTimeout(() => {
+                            if (currentAct === 2) {
+                                logStatus("Spawning cops for Act 2");
+                                spawnCops();
+                            }
+                        }, 300);
                     }
-                }, 500);
+                }
             }
+            
+            animateReturn();
         }
-        animateReturn();
+        
+        // Start the first run
+        startRun();
     }
 
     function createCopElement(position, direction) {
-        // Create container for the cop
+        // Create a container with specified dimensions
         const copContainer = document.createElement("div");
         copContainer.style.position = "fixed";
         copContainer.style.left = position.left;
         copContainer.style.bottom = position.bottom;
-        copContainer.style.width = "100px";       // Container width
-        copContainer.style.height = "100px";      // Container height
+        copContainer.style.width = "100px"; // Smaller container matches visible area
+        copContainer.style.height = "100px";
         copContainer.style.zIndex = "999998";
-        copContainer.style.overflow = "visible";  // Let sprite overflow if needed
+        copContainer.style.overflow = "hidden"; // Ensure we crop to container
         
-        // Create the actual sprite element inside the container
+        // Create a div for the sprite that will use background-image
         const copSprite = document.createElement("div");
-        copSprite.style.width = "100px";          // Sprite size
-        copSprite.style.height = "100px";
+        copSprite.style.width = "100%";
+        copSprite.style.height = "100%";
         copSprite.style.backgroundImage = `url(${copSpriteSheet})`;
-        copSprite.style.backgroundSize = "1024px 1024px"; // Actual size based on user's info
-        copSprite.style.backgroundRepeat = "no-repeat";
-        copSprite.style.backgroundPosition = "0 0"; // Start with first frame
-        copSprite.style.transform = direction === "left" ? "" : "scaleX(-1)";
+        copSprite.style.backgroundSize = "1024px 1024px"; // Full sprite sheet size
+        copSprite.style.backgroundPosition = copSpritePositions.run1; // Start with first frame
         
-        // Store sprite element reference for animation
+        // Apply transform for direction
+        if (direction === "right") {
+            copSprite.style.transform = "scaleX(-1)"; // Flip horizontally
+        }
+        
+        // Store reference for animation
         copContainer.sprite = copSprite;
         
-        // Add sprite to container
         copContainer.appendChild(copSprite);
         document.body.appendChild(copContainer);
+        
+        logStatus(`Created cop with ${direction} direction, using background-image approach`);
         
         return copContainer;
     }
@@ -156,6 +181,9 @@
             }, "right")
         ];
         
+        // Log to debug
+        logStatus(`Created cops: Left cop at ${cops[0].style.left}, Right cop at ${cops[1].style.left}`);
+        
         // Start animation frames for cops
         let copFrame = 0;
         let lastFrameTime = 0;
@@ -164,15 +192,15 @@
             // Only update frame if enough time has passed
             if (!lastFrameTime || timestamp - lastFrameTime > copAnimationSpeed) {
                 const runFrames = [
-                    { x: 0, y: 0 },           // Frame 1 - top left quadrant
-                    { x: -512, y: 0 },        // Frame 2 - top right quadrant
-                    { x: 0, y: -512 }         // Frame 3 - bottom left quadrant
+                    copSpritePositions.run1,  // Top left quadrant
+                    copSpritePositions.run2,  // Top right quadrant
+                    copSpritePositions.run3   // Bottom left quadrant
                 ];
                 const currentFrame = runFrames[copFrame];
                 
                 cops.forEach(cop => {
-                    if (!cop.tripped) {
-                        cop.sprite.style.backgroundPosition = `${currentFrame.x}px ${currentFrame.y}px`;
+                    if (!cop.tripped && cop.parentNode) {
+                        cop.sprite.style.backgroundPosition = currentFrame;
                     }
                 });
                 
@@ -180,7 +208,7 @@
                 lastFrameTime = timestamp;
             }
             
-            if (cops[0].parentNode && !cops[0].tripped) {
+            if (cops.length > 0 && cops[0].parentNode && !cops[0].tripped) {
                 requestAnimationFrame(animateCopSprites);
             }
         }
@@ -195,16 +223,27 @@
         const rightCop = cops[1];
 
         function moveCops() {
-            const leftX = parseInt(leftCop.style.left) + copMovementSpeed;
-            const rightX = parseInt(rightCop.style.left) - copMovementSpeed;
-
+            // Get current positions
+            let leftX = parseInt(leftCop.style.left) || -100;
+            let rightX = parseInt(rightCop.style.left) || window.innerWidth;
+            
+            // Update positions
+            leftX += copMovementSpeed;
+            rightX -= copMovementSpeed;
+            
+            // Apply new positions
             leftCop.style.left = `${leftX}px`;
             rightCop.style.left = `${rightX}px`;
+            
+            // Log positions occasionally for debugging
+            if (leftX % 100 < 5) {
+                logStatus(`Cop positions: Left cop at ${leftX}px, Right cop at ${rightX}px`);
+            }
 
             if (Math.abs(leftX - rightX) < 50) {
                 // Change to trip sprite (bottom right quadrant)
-                leftCop.sprite.style.backgroundPosition = "-512px -512px";
-                rightCop.sprite.style.backgroundPosition = "-512px -512px";
+                leftCop.sprite.style.backgroundPosition = copSpritePositions.trip;
+                rightCop.sprite.style.backgroundPosition = copSpritePositions.trip;
                 
                 // Mark as tripped to stop run animation
                 leftCop.tripped = true;
@@ -463,15 +502,15 @@
             // Only update frame if enough time has passed
             if (!lastFrameTime || timestamp - lastFrameTime > copAnimationSpeed) {
                 const runFrames = [
-                    { x: 0, y: 0 },           // Frame 1 - top left quadrant
-                    { x: -512, y: 0 },        // Frame 2 - top right quadrant
-                    { x: 0, y: -512 }         // Frame 3 - bottom left quadrant
+                    copSpritePositions.run1,  // Top left quadrant
+                    copSpritePositions.run2,  // Top right quadrant
+                    copSpritePositions.run3   // Bottom left quadrant
                 ];
                 const currentFrame = runFrames[copFrame];
                 
                 cops.forEach(cop => {
-                    if (!cop.tripped) {
-                        cop.sprite.style.backgroundPosition = `${currentFrame.x}px ${currentFrame.y}px`;
+                    if (!cop.tripped && cop.parentNode) {
+                        cop.sprite.style.backgroundPosition = currentFrame;
                     }
                 });
                 
@@ -479,7 +518,7 @@
                 lastFrameTime = timestamp;
             }
             
-            if (cops[0].parentNode && !cops[0].tripped) {
+            if (cops.length > 0 && cops[0].parentNode && !cops[0].tripped) {
                 requestAnimationFrame(animateCopSprites);
             }
         }
@@ -556,15 +595,17 @@
         function copCollide() {
             // Cops trip over each other (bottom right quadrant)
             logStatus("Final chase: Cops collide");
-            leftCop.sprite.style.backgroundPosition = "-512px -512px";
-            rightCop.sprite.style.backgroundPosition = "-512px -512px";
+            
+            // Trip animation uses bottom right quadrant
+            leftCop.sprite.style.backgroundPosition = copSpritePositions.trip;
+            rightCop.sprite.style.backgroundPosition = copSpritePositions.trip;
             
             leftCop.tripped = true;
             rightCop.tripped = true;
             
-            // Make cops fall down animation
+            // Additional rotation for fall effect
             leftCop.sprite.style.transform = "rotate(90deg)";
-            rightCop.sprite.style.transform = "rotate(-90deg)";
+            rightCop.sprite.style.transform = "scaleX(-1) rotate(-90deg)";
             
             setTimeout(() => {
                 if (leftCop.parentNode) document.body.removeChild(leftCop);
