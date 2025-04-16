@@ -17,6 +17,15 @@
         console.log(`[NKD Debug] ${message}`);
     }
     
+    // Helper function to dispatch act completion events
+    function dispatchActCompleted(actNumber) {
+        const event = new CustomEvent('actCompleted', {
+            detail: { act: actNumber }
+        });
+        window.dispatchEvent(event);
+        logStatus(`Dispatched completed event for Act ${actNumber}`);
+    }
+    
     // Sprite positions for the cop animations - fixed to match the actual sprite sheet structure
     const copSpritePositions = {
         run1: "0px 0px",             // Top left quadrant
@@ -65,6 +74,9 @@
         } else {
             document.body.removeChild(nkdMan);
             logStatus("Act 1 completed");
+            
+            // Dispatch Act 1 completion event
+            dispatchActCompleted(1);
             
             // If it's Act 1, proceed to Act 2
             if (currentAct === 1) {
@@ -255,6 +267,9 @@
                     document.body.removeChild(rightCop);
                     logStatus("Cops removed, preparing for Act 3");
                     
+                    // Dispatch Act 2 completion event
+                    dispatchActCompleted(2);
+                    
                     // Move to Act 3 after cops crash in Act 2
                     setTimeout(() => {
                         currentAct = 3;
@@ -351,6 +366,9 @@
                         logStatus("Act 3: NKD Man chases after Lady");
                         document.body.removeChild(nkdMan);
                     }
+                    
+                    // Dispatch Act 3 completion event
+                    dispatchActCompleted(3);
                     
                     currentAct = 4;
                     logStatus("Starting Act 4");
@@ -651,6 +669,9 @@
                 if (cop.parentNode) document.body.removeChild(cop);
             });
             
+            // Dispatch Act 4 completion event
+            dispatchActCompleted(4);
+            
             // Reset for future clicks
             hasReturned = false;
             activated = false;
@@ -664,6 +685,10 @@
             // Reset the click counter display
             const counter = document.getElementById('click-count');
             if (counter) counter.textContent = "0";
+            
+            // Also reset counter container class
+            const counterContainer = document.getElementById('counter-container');
+            if (counterContainer) counterContainer.className = 'click-counter';
             
             logStatus("Animation reset, ready for next activation");
         }
