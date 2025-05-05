@@ -1,12 +1,18 @@
 // NKD Man 1.1 - The Epic Saga in 4 Acts
 (function() {
+    // Use absolute URLs with chrome extension protocol to reference extension resources
+    const getExtensionURL = function(path) {
+        return chrome.runtime.getURL(path);
+    };
+
+    // Extension image resources with absolute URLs
     const frameImages = [
-        "assets/nkdman_frame_0.png",
-        "assets/nkdman_frame_1.png"
+        getExtensionURL("assets/nkdman_frame_0.png"),
+        getExtensionURL("assets/nkdman_frame_1.png")
     ];
-    const nkdLadyImage = "assets/nkdlady_frame.gif"; // Updated extension from .png to .gif
+    const nkdLadyImage = getExtensionURL("assets/nkdlady_frame.gif"); // Updated extension from .png to .gif
     // Replace separate cop images with sprite sheet
-    const copSpriteSheet = "assets/cop_sprite_sheet.png";
+    const copSpriteSheet = getExtensionURL("assets/cop_sprite_sheet.png");
     
     let nkdMan, nkdLady, position = -100, speed = 10, frame = 0, cops = [];
     let hasReturned = false;
@@ -51,12 +57,19 @@
         img.src = src;
         // Add error handling for missing images
         img.onerror = function() {
+            logStatus(`Failed to load image: ${src}`);
             if (src === nkdLadyImage) {
                 logStatus("NKD Lady image not found, using NKD Man instead");
                 nkdLadyImageAvailable = false;
                 img.src = frameImages[0]; // Use NKD Man as fallback
             }
         };
+        
+        // Log successful image loading
+        img.onload = function() {
+            logStatus(`Successfully loaded image: ${src}`);
+        };
+        
         Object.assign(img.style, styles);
         document.body.appendChild(img);
         return img;
